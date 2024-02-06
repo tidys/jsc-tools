@@ -1,19 +1,29 @@
 {
   "name": "jsc-tools",
   "version": "0.0.1",
-  "description": "The package template for getting started.",
-  "author": "Cocos Creator",
-  "main": "main.js",
-  "main-menu": {
-    "i18n:MAIN_MENU.package.title/jsc-tools": {
-      "message": "jsc-tools:open"
-    }
+  "description": "jsc-tools",
+  "author": "xu_yanfeng",
+  "devDependencies": {
+    "@types/fs-extra": "9.0.1",
+    "@types/lodash": "^4.14.202",
+    "@types/node": "16.11.12",
+    "@types/pako": "^2.0.3",
+    "@xuyanfeng/cc-ui": "0.2.18",
+    "cc-plugin": "file:.yalc/cc-plugin",
+    "lodash": "^4.17.21",
+    "monaco-editor": "^0.33.0",
+    "monaco-editor-webpack-plugin": "^7.1.0",
+    "pako": "^2.1.0",
+    "xxtea-node": "^1.1.5"
   },
-  "panel": {
-    "main": "panel/index.js",
-    "type": "dockable",
-    "title": "jsc-tools",
-    "width": 400,
-    "height": 300
-  }
+  "scripts": {
+    "installForce": "yarn install --force",
+    "ccp-pack-v2": "cc-plugin pack cp-v2",
+    "ccp-pack-v3": "cc-plugin pack cp-v3",
+    "ccp-pack-web": "cc-plugin pack web",
+    "ccp-serve-v2": "cc-plugin serve cp-v2",
+    "ccp-serve-v3": "cc-plugin serve cp-v3",
+    "ccp-serve-web": "cc-plugin serve web"
+  },
+  "dependencies": {}
 }
