@@ -4,72 +4,77 @@
       <CCInput v-model:value="xxtea_key"></CCInput>
     </CCProp>
     <CCSection name="加密">
-      <CCButton @click="onClickBtnEncode">...</CCButton>
+      <CCProp name="zip" tooltip="压缩代码" align="left">
+        <CCCheckBox v-model:value="encode_zip"> </CCCheckBox>
+      </CCProp>
+      <div style="display: flex; flex-direction: row">
+        <div style="flex: 1"></div>
+        <CCButton @click="onClickBtnEncode">选择文件</CCButton>
+      </div>
     </CCSection>
-    <CCSection name="解密">
+    <CCSection name="解密" style="flex: 1; display: flex; flex-direction: column">
       <CCProp name="jsc文件">
         <CCInput v-model:value="codeFileName"></CCInput>
         <CCButton @click="onClickBtnDecode">decode</CCButton>
       </CCProp>
-    </CCSection>
-    <div class="decode" @drop.prevent="drop" @dragover.prevent.stop @dragenter.prevent.stop @dragleave.prevent>
-      <div v-show="!decodeSuccess">拖拽jsc文件解码</div>
-      <div v-show="decodeSuccess" ref="code" class="code">
+      <div class="decode" @drop.prevent="drop" @dragover.prevent.stop @dragenter.prevent.stop @dragleave.prevent>
+        <div v-show="!decodeSuccess">拖拽jsc文件解码</div>
+        <div v-show="decodeSuccess" ref="code" class="code"></div>
       </div>
-    </div>
+    </CCSection>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, provide, nextTick, toRaw } from 'vue';
-import PluginConfig from '../../cc-plugin.config';
-import ccui from '@xuyanfeng/cc-ui';
+import { defineComponent, onMounted, ref, provide, nextTick, toRaw } from "vue";
+import PluginConfig from "../../cc-plugin.config";
+import ccui from "@xuyanfeng/cc-ui";
 import { readFileSync, existsSync, writeFileSync } from "fs";
 import { join, dirname, basename, extname } from "path";
-import * as monaco from 'monaco-editor';
+import * as monaco from "monaco-editor";
 import { encrypt, toString, decrypt, toBytes, encryptToString, decryptToString } from "xxtea-node";
 import { createHash } from "crypto";
 import pako from "pako";
-import { Drop, Accept } from 'cc-plugin/src/ccp/util/drop'
-import { Download } from "cc-plugin/src/ccp/util/download"
-import CCP from 'cc-plugin/src/ccp/entry-main';
+import { Drop, Accept } from "cc-plugin/src/ccp/util/drop";
+import { Download } from "cc-plugin/src/ccp/util/download";
+import CCP from "cc-plugin/src/ccp/entry-main";
 
 const { CCInput, CCButton, CCProp, CCCheckBox, CCSection } = ccui.components;
 export default defineComponent({
-  name: 'index',
+  name: "index",
   components: { CCButton, CCProp, CCInput, CCCheckBox, CCSection },
   setup(props, { emit }) {
     let textEditor: monaco.editor.IStandaloneCodeEditor | null;
     onMounted(() => {
-      console.log('hi ~~~');
+      console.log("hi ~~~");
       if (code.value) {
         textEditor = monaco.editor.create(code.value, {
           model: null,
           automaticLayout: true,
           minimap: {
-            enabled: false
-          }
-        })
-        textEditor.setModel(monaco.editor.createModel("", 'javascript'));
+            enabled: false,
+          },
+        });
+        textEditor.setModel(monaco.editor.createModel("", "javascript"));
         textEditor.addAction({
-          id: 'download',
-          label: 'download',
-          contextMenuGroupId: 'my', // 将此动作添加到导航组
+          id: "download",
+          label: "download",
+          contextMenuGroupId: "my", // 将此动作添加到导航组
           run(editor: monaco.editor.ICodeEditor, uri: monaco.Uri) {
-            const name = basename(uri.path, extname(uri.path))
-            const filename = `${name}.js`
+            const name = basename(uri.path, extname(uri.path));
+            const filename = `${name}.js`;
             const code = editor.getValue();
             Download.downloadFile(filename, code);
-          }
-        })
+          },
+        });
       }
     });
     const code = ref<HTMLDivElement>();
     const xxtea_key = ref("fishf00a-684a-48");
 
     function md5(file: string) {
-      const data = readFileSync(file)
-      const md5 = createHash('md5')
-      return md5.update(data).digest("hex")
+      const data = readFileSync(file);
+      const md5 = createHash("md5");
+      return md5.update(data).digest("hex");
     }
     function xxteaKeyBytes() {
       const v = toRaw(xxtea_key.value);
@@ -77,11 +82,11 @@ export default defineComponent({
     }
     function isGZipBuffer(data: Uint8Array) {
       // zip的前两位是标志位
-      return data[0] == 0x1F && data[1] == 0x8B;
+      return data[0] == 0x1f && data[1] == 0x8b;
     }
     function decodeJSC(data: ArrayBuffer): string | null {
       const bytes = xxteaKeyBytes();
-      const u8 = new Uint8Array(data)
+      const u8 = new Uint8Array(data);
       let code = decrypt(u8, bytes);
       if (code) {
         if (isGZipBuffer(code)) {
@@ -94,7 +99,9 @@ export default defineComponent({
     }
     const decodeSuccess = ref<boolean>(true);
     const codeFileName = ref("");
+    const encode_zip = ref(true);
     return {
+      encode_zip,
       codeFileName,
       xxtea_key,
       decodeSuccess,
@@ -106,35 +113,51 @@ export default defineComponent({
           jsc(name: string, data: ArrayBuffer) {
             const ret = decodeJSC(data);
             if (ret === null) {
-              codeFileName.value = ""
+              codeFileName.value = "";
               decodeSuccess.value = false;
               textEditor?.setValue("");
               CCP.Adaptation.Dialog.message({
-                message: '解密失败, xxtea key无效',
-              })
+                message: "解密失败, xxtea key无效",
+              });
             } else {
               codeFileName.value = name;
               decodeSuccess.value = true;
               // 设置textEditor的Uri
               const uri = monaco.Uri.file(name);
-              textEditor.setModel(monaco.editor.createModel(ret, 'javascript', uri));
+              textEditor.setModel(monaco.editor.createModel(ret, "javascript", uri));
               textEditor?.setValue(ret);
             }
-          }
+          },
         });
         drop.onWeb(event);
       },
-      onClickBtnEncode() {
-        console.log("encode");
-        // const en_code = encrypt(u8, key_bytes);// uint8array
-        const file = join(__dirname, "index1.js");
-        const newFile = join(__dirname, "index1.jsc");
-        const data = readFileSync(file);
-        const zipData = pako.gzip(data);
-        zipData[9] = 10; // os 标志位
-        let en_code = encrypt(zipData, xxteaKeyBytes()); // uint8array
-        if (en_code) {
-          writeFileSync(newFile, en_code);
+      async onClickBtnEncode() {
+        const ret = await CCP.Adaptation.Dialog.select({
+          title: "请选择文件",
+          type: "file",
+          multi: false,
+          filters: [{ name: "js", extensions: [".js"] }],
+        });
+        const keys = Object.keys(ret);
+        if (keys.length > 0) {
+          const file = keys[0];
+          let fileData = ret[file];
+          if (!fileData) {
+            CCP.Adaptation.Dialog.message({ message: `${file} 数据为空` });
+            return;
+          }
+          const name = basename(file, extname(file));
+          const newFile = `${name}.jsc`;
+          if (encode_zip.value) {
+            fileData = pako.gzip(fileData);
+            fileData[9] = 10; // os 标志位
+          }
+          const en_data = encrypt(fileData, xxteaKeyBytes());
+          if (en_data) {
+            Download.downloadBlobFile(newFile, new Blob([en_data], { type: "application/octet-stream" }));
+          } else {
+            CCP.Adaptation.Dialog.message({ message: "加密失败" });
+          }
         }
       },
       onClickBtnDecode() {
@@ -149,8 +172,7 @@ export default defineComponent({
         // 是能够分析出是否为zip的
 
         const data = readFileSync(file);
-
-      }
+      },
     };
   },
 });
