@@ -1,11 +1,11 @@
 <template>
   <div class="panel">
     <CCProp name="xxtea key" tooltip="一般是16位">
-      <CCInput v-model:value="xxtea_key"></CCInput>
+      <CCInput v-model:value="xxtea_key" @change="onChangeXXTeaKey"></CCInput>
     </CCProp>
     <CCSection name="加密">
       <CCProp name="zip" tooltip="压缩代码" align="left">
-        <CCCheckBox v-model:value="encode_zip"> </CCCheckBox>
+        <CCCheckBox v-model:value="encode_zip" @change="onChangeEncodeZip"> </CCCheckBox>
       </CCProp>
       <div style="display: flex; flex-direction: row">
         <div style="flex: 1"></div>
@@ -39,12 +39,24 @@ import pako from "pako";
 import { Drop, Accept } from "cc-plugin/src/ccp/util/drop";
 import { Download } from "cc-plugin/src/ccp/util/download";
 import CCP from "cc-plugin/src/ccp/entry-main";
-
+import { Profile } from "cc-plugin/src/ccp/profile";
+interface ISaveData {
+  xxtea_key: string;
+  encode_zip: boolean;
+}
 const { CCInput, CCButton, CCProp, CCCheckBox, CCSection } = ccui.components;
 export default defineComponent({
   name: "index",
   components: { CCButton, CCProp, CCInput, CCCheckBox, CCSection },
   setup(props, { emit }) {
+    const profile = new Profile();
+    profile.init({}, PluginConfig);
+    const data = profile.load("jsc-tools.json") as ISaveData;
+    function saveConfig() {
+      data.xxtea_key = toRaw(xxtea_key.value);
+      data.encode_zip = toRaw(encode_zip.value);
+      profile.save(data);
+    }
     let textEditor: monaco.editor.IStandaloneCodeEditor | null;
     onMounted(() => {
       if (code.value) {
@@ -70,7 +82,7 @@ export default defineComponent({
       }
     });
     const code = ref<HTMLDivElement>();
-    const xxtea_key = ref("fishf00a-684a-48");
+    const xxtea_key = ref(data.xxtea_key || "fishf00a-684a-48");
 
     function md5(file: string) {
       const data = readFileSync(file);
@@ -118,13 +130,19 @@ export default defineComponent({
     }
     const decodeSuccess = ref<boolean>(false);
     const codeFileName = ref("");
-    const encode_zip = ref(true);
+    const encode_zip = ref(!!data.encode_zip);
     return {
       encode_zip,
       codeFileName,
       xxtea_key,
       decodeSuccess,
       code,
+      onChangeXXTeaKey() {
+        saveConfig();
+      },
+      onChangeEncodeZip() {
+        saveConfig();
+      },
       drop(event: DragEvent) {
         const drop = new Drop({
           multi: false,
