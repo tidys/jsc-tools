@@ -1,8 +1,14 @@
 <template>
   <div class="panel">
-    <CCProp name="xxtea key" tooltip="一般是16位">
-      <CCInput v-model:value="xxtea_key" @change="onChangeXXTeaKey"></CCInput>
-    </CCProp>
+    <CCSection name="xxtea">
+      <CCProp name="xxtea key" tooltip="一般是16位">
+        <CCInput v-model:value="xxtea_key" @change="onChangeXXTeaKey"></CCInput>
+      </CCProp>
+      <CCProp name="libcocos2djs.so" tooltip="从so文件中检索出来xxtea_key">
+        <div style="flex: 1"></div>
+        <CCButton @click="onUploadSo">...</CCButton>
+      </CCProp>
+    </CCSection>
     <CCSection name="加密">
       <CCProp name="zip" tooltip="压缩代码" align="left">
         <CCCheckBox v-model:value="encode_zip" @change="onChangeEncodeZip"> </CCCheckBox>
@@ -16,7 +22,7 @@
     </CCSection>
     <CCSection name="解密" style="flex: 1; display: flex; flex-direction: column">
       <CCProp name="jsc文件">
-        <CCInput v-model:value="codeFileName"></CCInput>
+        <CCInput v-model:value="codeFileName" :readonly="true"></CCInput>
         <CCButton @click="onClickBtnDecode"><i class="iconfont icon_js" style="color: rgb(255, 97, 97)"></i></CCButton>
       </CCProp>
       <div class="decode" @drop.prevent="drop" @dragover.prevent.stop @dragenter.prevent.stop @dragleave.prevent>
@@ -139,6 +145,55 @@ export default defineComponent({
       code,
       onChangeXXTeaKey() {
         saveConfig();
+      },
+      ff() {
+        const fs = require("fs");
+        const buffer = fs.readFileSync("./libcocos2djs.so");
+        const u8 = new Uint8Array(buffer);
+
+        // 从u8里面找到 Cocos Game 字符串
+        const flag = "Cocos Game";
+        for (let i = 0; i < u8.length - flag.length; ++i) {
+          // 从i开始，往后找flag.length个字节，并且和flag一致
+          let idx = 0;
+          while (idx < flag.length && u8[i + idx] === flag.charCodeAt(idx)) {
+            idx++;
+          }
+          if (idx === flag.length) {
+            // find it
+            const d = new Uint8Array(flag.length);
+            for (let index = 0; index < flag.length; ++index) {
+              d[index] = u8[index + i];
+            }
+            const str = Buffer.from(d).toString();
+            console.log(str);
+
+            const defaultXxteaKeyLen = 16 + 2; // 前后有空格
+            const ddd = new Uint8Array(defaultXxteaKeyLen);
+            for (let idx = 0; idx < defaultXxteaKeyLen; ++idx) {
+              ddd[idx] = u8[idx + flag.length + i];
+            }
+            console.log(Buffer.from(ddd).toString());
+            break;
+          }
+        }
+      },
+      async onUploadSo() {
+        const ret = await CCP.Adaptation.Dialog.select({
+          title: "请选择文件",
+          type: "file",
+          multi: false,
+          filters: [{ name: "so", extensions: [".so"] }],
+        });
+        const keys = Object.keys(ret);
+        if (keys.length > 0) {
+          const file = keys[0];
+          let fileData = ret[file];
+          // 有50M的限制
+          if (fileData.byteLength > 50 * 1024 * 1024) {
+          }
+          debugger;
+        }
       },
       onChangeEncodeZip() {
         saveConfig();
