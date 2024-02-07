@@ -1,6 +1,6 @@
 <template>
   <div class="panel">
-    <CCProp name="xxtea key">
+    <CCProp name="xxtea key" tooltip="一般是16位">
       <CCInput v-model:value="xxtea_key"></CCInput>
     </CCProp>
     <CCSection name="加密">

@@ -1070,10 +1070,10 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@xuyanfeng/cc-ui@0.2.18":
-  version "0.2.18"
-  resolved "https://registry.yarnpkg.com/@xuyanfeng/cc-ui/-/cc-ui-0.2.18.tgz#17f7045d7ef963304485bd93c3fa5cbfc0524410"
-  integrity sha512-N+ZqlpGTTaXmwsdvbuUodGK1/MPSBKXGUN6c8YXp3GCK+fHGxnmXv9heS6q6GFjH8UULJkY1Fe2p1z4CxjSUXg==
+"@xuyanfeng/cc-ui@0.2.19":
+  version "0.2.19"
+  resolved "https://registry.yarnpkg.com/@xuyanfeng/cc-ui/-/cc-ui-0.2.19.tgz#5a213d82bf27ee15f2717a45d525c5f34c226db8"
+  integrity sha512-G0X0EDBqXncDxNXptQ1RTiWheRHtGYF877ZWoZqbrsnM1r0fY4rZbdrZttVUDk7YRJGZqfVD5Z35q3VGrsXsEw==
   dependencies:
     chalk "^5.3.0"
     chroma-js "2.1.2"
@@ -1729,8 +1729,10 @@ case-sensitive-paths-webpack-plugin@^2.3.0:
   resolved "https://registry.yarnpkg.com/case-sensitive-paths-webpack-plugin/-/case-sensitive-paths-webpack-plugin-2.4.0.tgz#db64066c6422eed2e08cc14b986ca43796dbc6d4"
   integrity sha512-roIFONhcxog0JSSWbvVAh3OocukmSgpqOH6YpMkCvav/ySIV3JKg4Dc8vYtQjYi/UxpNE36r/9v+VqTQqgkYmw==
 
-"cc-plugin@file:.yalc/cc-plugin":
-  version "2.1.29"
+cc-plugin@2.1.30:
+  version "2.1.30"
+  resolved "https://registry.yarnpkg.com/cc-plugin/-/cc-plugin-2.1.30.tgz#840826951a7e8b1d0cd28cb18957dafcbba9d052"
+  integrity sha512-5ei24qzJCYRQSdM+g/b8owU97IqJ9QaemvT/xEgvCxXK5hol0e1QXcumvnpvh0wI8EN7yrk1+43+BgbgaHx7Tw==
   dependencies:
     "@babel/generator" "^7.16.8"
     "@popperjs/core" "^2.11.6"

@@ -1,0 +1,78 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static content to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: install
+        run: npm run installForce
+
+      - name: pack web
+        run: npm run ccp-pack-web
+      - name: DeployWithDeleteLatestResult
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.PERSONAL_TOKEN }}
+          publish_dir: ./web
+          external_repository: tidys/jsc-tools
+          publish_branch: gh-pages
+          keep_files: true
+          exclude_assets: '*.js,*.css'
+      - name: DeployJsCss
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.PERSONAL_TOKEN }}
+          publish_dir: ./web
+          external_repository: tidys/jsc-tools
+          publish_branch: gh-pages
+          keep_files: true
+          exclude_assets: ''
+      - name: Sync to Gitee
+        uses: wearerequired/git-mirror-action@master
+        env:
+            SSH_PRIVATE_KEY: ${{ secrets.GITEE_RSA_PRIVATE_KEY }}
+        with:
+            # 注意替换为你的 GitHub 源仓库地址
+            source-repo: "git@github.com:tidys/jsc-tools.git"
+            destination-repo: "git@gitee.com:tidys/jsc-tools.git"
+      - name: Gitee Pages Action
+        # uses: yanglbme/gitee-pages-action@a813811f52ed4f53010702a528b72053bd04685f
+        uses: yanglbme/gitee-pages-action@main
+        with:
+            # The Gitee username, like yanglbme
+            gitee-username: ${{ secrets.GITEE_REPO }} # optional
+            # The Gitee password
+            gitee-password: ${{ secrets.GITEE_PWD }} # optional
+            # The Gitee repository, like doocs/leetcode
+            gitee-repo:  tidys/jsc-tools
+            # Which branch to build
+            branch: gh-pages # optional, default is master
+            # Use force https or not
+            https: false # optional, default is true    
