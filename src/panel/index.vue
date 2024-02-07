@@ -9,16 +9,18 @@
       </CCProp>
       <div style="display: flex; flex-direction: row">
         <div style="flex: 1"></div>
-        <CCButton @click="onClickBtnEncode">选择文件</CCButton>
+        <CCButton @click="onClickBtnEncode">
+          <i class="iconfont icon_js" style="color: rgb(0, 255, 0)"></i>
+        </CCButton>
       </div>
     </CCSection>
     <CCSection name="解密" style="flex: 1; display: flex; flex-direction: column">
       <CCProp name="jsc文件">
         <CCInput v-model:value="codeFileName"></CCInput>
-        <CCButton @click="onClickBtnDecode">decode</CCButton>
+        <CCButton @click="onClickBtnDecode"><i class="iconfont icon_js" style="color: rgb(255, 97, 97)"></i></CCButton>
       </CCProp>
       <div class="decode" @drop.prevent="drop" @dragover.prevent.stop @dragenter.prevent.stop @dragleave.prevent>
-        <div v-show="!decodeSuccess">拖拽jsc文件解码</div>
+        <div v-show="!decodeSuccess">拖拽jsc文件解密</div>
         <div v-show="decodeSuccess" ref="code" class="code"></div>
       </div>
     </CCSection>
@@ -45,7 +47,6 @@ export default defineComponent({
   setup(props, { emit }) {
     let textEditor: monaco.editor.IStandaloneCodeEditor | null;
     onMounted(() => {
-      console.log("hi ~~~");
       if (code.value) {
         textEditor = monaco.editor.create(code.value, {
           model: null,
@@ -97,7 +98,25 @@ export default defineComponent({
       }
       return null;
     }
-    const decodeSuccess = ref<boolean>(true);
+    function doDecode(name: string, data: ArrayBuffer) {
+      const ret = decodeJSC(data);
+      if (ret === null) {
+        codeFileName.value = "";
+        decodeSuccess.value = false;
+        textEditor?.setValue("");
+        CCP.Adaptation.Dialog.message({
+          message: "解密失败, xxtea key无效",
+        });
+      } else {
+        codeFileName.value = name;
+        decodeSuccess.value = true;
+        // 设置textEditor的Uri
+        const uri = monaco.Uri.file(name);
+        textEditor.setModel(monaco.editor.createModel(ret, "javascript", uri));
+        textEditor?.setValue(ret);
+      }
+    }
+    const decodeSuccess = ref<boolean>(false);
     const codeFileName = ref("");
     const encode_zip = ref(true);
     return {
@@ -111,22 +130,7 @@ export default defineComponent({
           multi: false,
           accept: [Accept.JSC, Accept.JS],
           jsc(name: string, data: ArrayBuffer) {
-            const ret = decodeJSC(data);
-            if (ret === null) {
-              codeFileName.value = "";
-              decodeSuccess.value = false;
-              textEditor?.setValue("");
-              CCP.Adaptation.Dialog.message({
-                message: "解密失败, xxtea key无效",
-              });
-            } else {
-              codeFileName.value = name;
-              decodeSuccess.value = true;
-              // 设置textEditor的Uri
-              const uri = monaco.Uri.file(name);
-              textEditor.setModel(monaco.editor.createModel(ret, "javascript", uri));
-              textEditor?.setValue(ret);
-            }
+            doDecode(name, data);
           },
         });
         drop.onWeb(event);
@@ -160,18 +164,30 @@ export default defineComponent({
           }
         }
       },
-      onClickBtnDecode() {
+      async onClickBtnDecode() {
         console.log("decode");
-
-        debugger;
-        const file = join(__dirname, "../../../build/jsb-link/assets/internal/index.jsc");
-
-        if (!existsSync(file)) {
-          return;
+        const ret = await CCP.Adaptation.Dialog.select({
+          title: "请选择文件",
+          type: "file",
+          multi: false,
+          filters: [{ name: "jsc", extensions: [".jsc"] }],
+        });
+        const keys = Object.keys(ret);
+        if (keys.length > 0) {
+          const file = keys[0];
+          const fileData = ret[file];
+          if (!fileData) {
+            CCP.Adaptation.Dialog.message({ message: `${file} 数据为空` });
+            return;
+          }
+          doDecode(file, fileData);
         }
-        // 是能够分析出是否为zip的
 
-        const data = readFileSync(file);
+        // const file = join(__dirname, "../../../build/jsb-link/assets/internal/index.jsc");
+        // if (!existsSync(file)) {
+        //   return;
+        // }
+        // const data = readFileSync(file);
       },
     };
   },
