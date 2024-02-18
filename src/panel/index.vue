@@ -1,7 +1,7 @@
 <template>
   <div class="panel">
     <CCSection name="xxtea">
-      <CCProp name="xxtea key" tooltip="一般是16位">
+      <CCProp name="xxtea key" :tooltip="xxtea_key_tips">
         <CCInput v-model:value="xxtea_key" @change="onChangeXXTeaKey"></CCInput>
       </CCProp>
       <CCProp name="libcocos2djs.so" tooltip="从so文件中检索出来xxtea_key">
@@ -160,15 +160,27 @@ export default defineComponent({
           const str = Buffer.from(flagBuffer).toString();
           // console.log(str);
 
-          const defaultXxteaKeyLen = 16 + 2; // 前后有0
           const data = [];
-          for (let idx = 0; idx < defaultXxteaKeyLen; ++idx) {
-            const value = u8[idx + flag.length + i];
-            if (value !== 0) {
-              // 过滤掉前后的0
-              data.push(value);
-            }
+          let offset = flag.length + i;
+          // 找到不是0的开头
+          let beginValue = u8[offset];
+          while ((beginValue = u8[offset]) === 0) {
+            offset++;
           }
+          // 找到结尾是0的就结束
+          do {
+            data.push(beginValue);
+            offset++;
+          } while ((beginValue = u8[offset]) !== 0);
+
+          // const defaultXxteaKeyLen = 16 + 2; // 前后有0
+          // for (let idx = 0; idx < defaultXxteaKeyLen; ++idx) {
+          //   const value = u8[idx + offset];
+          //   if (value !== 0) {
+          //     // 过滤掉前后的0
+          //     data.push(value);
+          //   }
+          // }
           const xxtea_key_buffer = new Uint8Array(data);
           ret = Buffer.from(xxtea_key_buffer).toString().trim();
           // console.log(ret);
@@ -177,7 +189,13 @@ export default defineComponent({
       }
       return ret;
     }
+    const xxtea_key_tips = ref("");
+    function updateKeyTips() {
+      xxtea_key_tips.value = `一般是16位，当前${xxtea_key.value.length}位`;
+    }
+    updateKeyTips();
     return {
+      xxtea_key_tips,
       encode_zip,
       codeFileName,
       xxtea_key,
@@ -185,6 +203,7 @@ export default defineComponent({
       codeDivElement,
       onChangeXXTeaKey() {
         saveConfig();
+        updateKeyTips();
       },
       async onUploadSo() {
         const ret = await CCP.Adaptation.Dialog.select({
@@ -210,6 +229,7 @@ export default defineComponent({
               info.push(`未找到xxtea密钥, so可能没有使用xxtea加密`);
             } else {
               xxtea_key.value = key;
+              updateKeyTips();
               info.push(`找到xxtea密钥: ${key}`);
             }
           } else {
