@@ -46,6 +46,7 @@ import { Drop, Accept } from "cc-plugin/src/ccp/util/drop";
 import { Download } from "cc-plugin/src/ccp/util/download";
 import CCP from "cc-plugin/src/ccp/entry-main";
 import { Profile } from "cc-plugin/src/ccp/profile";
+import { Buffer } from "buffer";
 interface ISaveData {
   xxtea_key: string;
   encode_zip: boolean;
@@ -137,6 +138,43 @@ export default defineComponent({
     const decodeSuccess = ref<boolean>(false);
     const codeFileName = ref("");
     const encode_zip = ref(!!data.encode_zip);
+    function findKeyFromSo(buffer: ArrayBuffer) {
+      let ret = "";
+      const u8 = new Uint8Array(buffer);
+      // 从u8里面找到 Cocos Game 字符串
+      const flag = "Cocos Game";
+      for (let i = 0; i < u8.length - flag.length; ++i) {
+        // 从i开始，往后找flag.length个字节，并且和flag一致
+        let idx = 0;
+        while (idx < flag.length && u8[i + idx] === flag.charCodeAt(idx)) {
+          idx++;
+        }
+        if (idx === flag.length) {
+          // find it
+          const flagBuffer = new Uint8Array(flag.length);
+          for (let index = 0; index < flag.length; ++index) {
+            flagBuffer[index] = u8[index + i];
+          }
+          const str = Buffer.from(flagBuffer).toString();
+          // console.log(str);
+
+          const defaultXxteaKeyLen = 16 + 2; // 前后有0
+          const data = [];
+          for (let idx = 0; idx < defaultXxteaKeyLen; ++idx) {
+            const value = u8[idx + flag.length + i];
+            if (value !== 0) {
+              // 过滤掉前后的0
+              data.push(value);
+            }
+          }
+          const xxtea_key_buffer = new Uint8Array(data);
+          ret = Buffer.from(xxtea_key_buffer).toString().trim();
+          // console.log(ret);
+          break;
+        }
+      }
+      return ret;
+    }
     return {
       encode_zip,
       codeFileName,
@@ -145,38 +183,6 @@ export default defineComponent({
       code,
       onChangeXXTeaKey() {
         saveConfig();
-      },
-      ff() {
-        const fs = require("fs");
-        const buffer = fs.readFileSync("./libcocos2djs.so");
-        const u8 = new Uint8Array(buffer);
-
-        // 从u8里面找到 Cocos Game 字符串
-        const flag = "Cocos Game";
-        for (let i = 0; i < u8.length - flag.length; ++i) {
-          // 从i开始，往后找flag.length个字节，并且和flag一致
-          let idx = 0;
-          while (idx < flag.length && u8[i + idx] === flag.charCodeAt(idx)) {
-            idx++;
-          }
-          if (idx === flag.length) {
-            // find it
-            const d = new Uint8Array(flag.length);
-            for (let index = 0; index < flag.length; ++index) {
-              d[index] = u8[index + i];
-            }
-            const str = Buffer.from(d).toString();
-            console.log(str);
-
-            const defaultXxteaKeyLen = 16 + 2; // 前后有空格
-            const ddd = new Uint8Array(defaultXxteaKeyLen);
-            for (let idx = 0; idx < defaultXxteaKeyLen; ++idx) {
-              ddd[idx] = u8[idx + flag.length + i];
-            }
-            console.log(Buffer.from(ddd).toString());
-            break;
-          }
-        }
       },
       async onUploadSo() {
         const ret = await CCP.Adaptation.Dialog.select({
@@ -188,11 +194,26 @@ export default defineComponent({
         const keys = Object.keys(ret);
         if (keys.length > 0) {
           const file = keys[0];
-          let fileData = ret[file];
+          const info = [];
+          if (file.toLowerCase().indexOf("cocos") === -1) {
+            info.push(`${file} is not cocos so`);
+          }
+          const fileData = ret[file];
           // 有50M的限制
           if (fileData.byteLength > 50 * 1024 * 1024) {
           }
-          debugger;
+          const key = findKeyFromSo(fileData);
+          if (key) {
+            if (key.startsWith("0.0.0.0")) {
+              info.push(`未找到xxtea密钥, so可能没有使用xxtea加密`);
+            } else {
+              xxtea_key.value = key;
+              info.push(`找到xxtea密钥: ${key}`);
+            }
+          } else {
+            info.push("未找到xxtea密钥");
+          }
+          CCP.Adaptation.Dialog.message({ message: info.join("\n") });
         }
       },
       onChangeEncodeZip() {
