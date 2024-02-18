@@ -32,7 +32,7 @@ const manifest: CocosPluginManifest = {
   ],
   menus: [
     {
-      path: `jsc-tools/${i18n("title")}`,
+      path: `jsc-tools`,
       message: {
         name: "showPanel",
       },
