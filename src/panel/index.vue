@@ -27,7 +27,7 @@
       </CCProp>
       <div class="decode" @drop.prevent="drop" @dragover.prevent.stop @dragenter.prevent.stop @dragleave.prevent>
         <div v-show="!decodeSuccess">拖拽jsc文件解密</div>
-        <div v-show="decodeSuccess" ref="code" class="code"></div>
+        <div v-show="decodeSuccess" ref="codeDivElement" class="code"></div>
       </div>
     </CCSection>
   </div>
@@ -66,8 +66,8 @@ export default defineComponent({
     }
     let textEditor: monaco.editor.IStandaloneCodeEditor | null;
     onMounted(() => {
-      if (code.value) {
-        textEditor = monaco.editor.create(code.value, {
+      if (codeDivElement.value) {
+        textEditor = monaco.editor.create(codeDivElement.value, {
           model: null,
           automaticLayout: true,
           minimap: {
@@ -80,7 +80,9 @@ export default defineComponent({
           label: "download",
           contextMenuGroupId: "my", // 将此动作添加到导航组
           run(editor: monaco.editor.ICodeEditor, uri: monaco.Uri) {
-            const name = basename(uri.path, extname(uri.path));
+            const a = toRaw(codeFileName.value);
+            // const a = uri.path;
+            const name = basename(a, extname(a));
             const filename = `${name}.js`;
             const code = editor.getValue();
             Download.downloadFile(filename, code);
@@ -88,7 +90,7 @@ export default defineComponent({
         });
       }
     });
-    const code = ref<HTMLDivElement>();
+    const codeDivElement = ref<HTMLDivElement>();
     const xxtea_key = ref(data.xxtea_key || "fishf00a-684a-48");
 
     function md5(file: string) {
@@ -129,9 +131,9 @@ export default defineComponent({
       } else {
         codeFileName.value = name;
         decodeSuccess.value = true;
-        // 设置textEditor的Uri
-        const uri = monaco.Uri.file(name);
-        textEditor.setModel(monaco.editor.createModel(ret, "javascript", uri));
+        // 设置textEditor的Uri,不能设置2次，否则会报错
+        // const uri = monaco.Uri.file(name);
+        // textEditor.setModel(monaco.editor.createModel(ret, "javascript", uri));
         textEditor?.setValue(ret);
       }
     }
@@ -180,7 +182,7 @@ export default defineComponent({
       codeFileName,
       xxtea_key,
       decodeSuccess,
-      code,
+      codeDivElement,
       onChangeXXTeaKey() {
         saveConfig();
       },
