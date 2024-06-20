@@ -15,7 +15,7 @@ export class JSC {
     return this.decodeJSC(data);
   }
   decodeJSC(data: ArrayBuffer): string | null {
-    const bytes = this.xxteaKeyBytes();
+    const bytes = JSC.xxteaKeyBytes(this.xxtea_key);
     const u8 = new Uint8Array(data);
     let code = decrypt(u8, bytes);
     if (code) {
@@ -31,7 +31,7 @@ export class JSC {
     // zip的前两位是标志位
     return data[0] == 0x1f && data[1] == 0x8b;
   }
-  private xxteaKeyBytes() {
-    return toBytes(this.xxtea_key);
+  public static xxteaKeyBytes(key: string) {
+    return toBytes(key);
   }
 }

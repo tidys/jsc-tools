@@ -43,9 +43,9 @@ import { encrypt, toString, decrypt, toBytes, encryptToString, decryptToString }
 import { createHash } from "crypto";
 import pako from "pako";
 import { Drop, Accept } from "cc-plugin/src/ccp/util/drop";
-import { Download } from "cc-plugin/src/ccp/util/download";
 import CCP from "cc-plugin/src/ccp/entry-main";
 import { Profile } from "cc-plugin/src/ccp/profile";
+import { JSC } from "../cli/jsc";
 import { Buffer } from "buffer";
 interface ISaveData {
   xxtea_key: string;
@@ -85,7 +85,7 @@ export default defineComponent({
             const name = basename(a, extname(a));
             const filename = `${name}.js`;
             const code = editor.getValue();
-            Download.downloadFile(filename, code);
+            CCP.Adaptation.Download.downloadFile(filename, code);
           },
         });
       }
@@ -98,29 +98,11 @@ export default defineComponent({
       const md5 = createHash("md5");
       return md5.update(data).digest("hex");
     }
-    function xxteaKeyBytes() {
-      const v = toRaw(xxtea_key.value);
-      return toBytes(v);
-    }
-    function isGZipBuffer(data: Uint8Array) {
-      // zip的前两位是标志位
-      return data[0] == 0x1f && data[1] == 0x8b;
-    }
-    function decodeJSC(data: ArrayBuffer): string | null {
-      const bytes = xxteaKeyBytes();
-      const u8 = new Uint8Array(data);
-      let code = decrypt(u8, bytes);
-      if (code) {
-        if (isGZipBuffer(code)) {
-          code = pako.inflate(code);
-        }
-        code = toString(code);
-        return code;
-      }
-      return null;
-    }
+
     function doDecode(name: string, data: ArrayBuffer) {
-      const ret = decodeJSC(data);
+      const v = toRaw(xxtea_key.value);
+      const jsc = new JSC(v);
+      const ret = jsc.decodeJSC(data);
       if (ret === null) {
         codeFileName.value = "";
         decodeSuccess.value = false;
@@ -272,9 +254,10 @@ export default defineComponent({
             fileData = pako.gzip(fileData);
             fileData[9] = 10; // os 标志位
           }
-          const en_data = encrypt(fileData, xxteaKeyBytes());
+          const v = toRaw(xxtea_key.value);
+          const en_data = encrypt(fileData, JSC.xxteaKeyBytes(v));
           if (en_data) {
-            Download.downloadBlobFile(newFile, new Blob([en_data], { type: "application/octet-stream" }));
+            CCP.Adaptation.Download.downloadBlobFile(newFile, new Blob([en_data], { type: "application/octet-stream" }));
           } else {
             CCP.Adaptation.Dialog.message({ message: "加密失败" });
           }
@@ -335,3 +318,4 @@ export default defineComponent({
   }
 }
 </style>
+../cli/jsc

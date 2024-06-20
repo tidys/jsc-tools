@@ -8,10 +8,11 @@
     "@types/lodash": "^4.14.202",
     "@types/node": "16.11.12",
     "@types/pako": "^2.0.3",
-    "@xuyanfeng/cc-ui": "0.2.20",
-    "cc-plugin": "2.1.33",
+    "@xuyanfeng/cc-ui": "^0.2.20",
+    "cc-plugin": "^2.1.33",
     "lodash": "^4.17.21",
     "monaco-editor": "^0.33.0",
+    "rimraf": "^5.0.5",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "pako": "^2.1.0",
     "xxtea-node": "^1.1.5"
@@ -23,7 +24,9 @@
     "ccp-pack-web": "cc-plugin pack web",
     "ccp-serve-v2": "cc-plugin serve cp-v2",
     "ccp-serve-v3": "cc-plugin serve cp-v3",
-    "ccp-serve-web": "cc-plugin serve web"
+    "ccp-serve-web": "cc-plugin serve web",
+    "clean-cli": "rimraf ./dist-cli-webpack",
+    "build-cli": "npm run clean-cli && webpack --config webpack.config.js"
   },
   "dependencies": {}
 }

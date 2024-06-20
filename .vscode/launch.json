@@ -1,0 +1,19 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "test jsc decode",
+      "cwd": "${workspaceFolder}/test",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "../dist-cli-webpack/jsc.js",
+      "args": ["20369a77-0ffc-4c", "index.jsc"],
+      "outFiles": ["${workspaceFolder}/**/*.js"],
+      "preLaunchTask": "npm: build-cli"
+    }
+  ]
+}

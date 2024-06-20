@@ -4,3 +4,5 @@ cc-plugin.json
 yalc.lock
 yarn-error.log
 dist/
+dist-cli-webpack/
+test/*.js
