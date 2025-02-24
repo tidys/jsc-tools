@@ -27,3 +27,12 @@
 在代码区域右键，`download`菜单可以下载代码到本地
 
 ![](./doc/menu.jpg)
+
+## cli
+运行 `build-cli` 会在dist-cli-webpack目录下生成jsc.js，
+
+命令行执行`node ./jsc.js `会输出使用方式
+
+```
+Usage: jsc.js <xxtea_key> <jsc_file>
+```

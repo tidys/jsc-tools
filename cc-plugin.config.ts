@@ -14,7 +14,7 @@ function i18n(key: string) {
 
 const manifest: CocosPluginManifest = {
   name: pkgName,
-  version: "1.0.0",
+  version: "1.0.1",
   description: "jsc-tools",
   author: "cc-plugin",
   main: "./src/main.ts",

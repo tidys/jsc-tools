@@ -30,6 +30,7 @@
         <div v-show="decodeSuccess" ref="codeDivElement" class="code"></div>
       </div>
     </CCSection>
+    <CCFootBar :version="version" :hint-key="hint"></CCFootBar>
   </div>
 </template>
 <script lang="ts">
@@ -51,10 +52,10 @@ interface ISaveData {
   xxtea_key: string;
   encode_zip: boolean;
 }
-const { CCInput, CCButton, CCProp, CCCheckBox, CCSection } = ccui.components;
+const { CCInput, CCButton, CCProp, CCCheckBox, CCSection, CCFootBar } = ccui.components;
 export default defineComponent({
   name: "index",
-  components: { CCButton, CCProp, CCInput, CCCheckBox, CCSection },
+  components: { CCButton, CCProp, CCInput, CCCheckBox, CCSection, CCFootBar },
   setup(props, { emit }) {
     const profile = new Profile();
     profile.init({}, PluginConfig);
@@ -176,7 +177,11 @@ export default defineComponent({
       xxtea_key_tips.value = `一般是16位，当前${xxtea_key.value.length}位`;
     }
     updateKeyTips();
+    const version = ref(PluginConfig.manifest.version);
+    const hint = ref(PluginConfig.manifest.name);
     return {
+      version,
+      hint,
       xxtea_key_tips,
       encode_zip,
       codeFileName,
